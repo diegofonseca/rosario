@@ -1,0 +1,26 @@
+{
+  "name": "rosario-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuex": "^4.1.0",
+    "@heroicons/vue": "^2.0.18",
+    "vue3-lottie": "^3.0.0",
+    "vue3-carousel": "^0.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.9",
+    "tailwindcss": "^3.3.3",
+    "postcss": "^8.4.27",
+    "autoprefixer": "^10.4.14",
+    "@tailwindcss/forms": "^0.5.4"
+  }
+}

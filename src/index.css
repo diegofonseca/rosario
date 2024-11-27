@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply antialiased;
+}
+
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
