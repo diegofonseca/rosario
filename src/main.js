@@ -92,18 +92,30 @@ const store = createStore({
 
 // Router
 const router = createRouter({
-  history: createWebHistory('./'),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
+      name: 'home',
       component: () => import('./views/Home.vue')
     },
     {
       path: '/rezar',
+      name: 'rezar',
       component: () => import('./views/Pray.vue')
     }
   ]
 })
+
+// Configuração de navegação global
+router.beforeEach((to, from, next) => {
+  // Se a rota não existir, redireciona para home
+  if (!to.matched.length) {
+    next({ name: 'home' });
+    return;
+  }
+  next();
+});
 
 const app = createApp(App)
 app.use(store)
