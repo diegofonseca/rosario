@@ -92,7 +92,7 @@ const store = createStore({
 
 // Router
 const router = createRouter({
-  history: createWebHistory('/rosario-app/'),
+  history: createWebHistory('./'),
   routes: [
     {
       path: '/',

@@ -4,7 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
-  base: '/rosario-app/', // Add this line for GitHub Pages
+  base: './',  // Mudando para caminho relativo
   server: {
     port: 3000
   },
