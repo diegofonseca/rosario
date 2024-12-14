@@ -56,13 +56,19 @@
             Rezar Novamente
           </button>
         </div>
+        
+        <!-- Ícone e mensagem sobre o atalho de teclado -->
+        <div class="keyboard-hint">
+          <span class="space-key">␣</span>
+          <span class="hint-text">Pressione espaço para avançar</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -234,6 +240,21 @@ export default {
       currentMysteryType.value = getCurrentMysteryType()
     }
 
+    const handleKeyPress = (event) => {
+      if (event.code === 'Space' || event.key === ' ') {
+        event.preventDefault() // Previne a rolagem da página
+        nextPrayer()
+      }
+    }
+
+    onMounted(() => {
+      window.addEventListener('keydown', handleKeyPress)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKeyPress)
+    })
+
     return {
       currentStep,
       currentTitle,
@@ -247,3 +268,33 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.keyboard-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.space-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 1.2em;
+}
+
+.hint-text {
+  font-style: italic;
+}
+</style>
