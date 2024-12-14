@@ -14,6 +14,9 @@
           <p class="text-lg text-gray-800 leading-relaxed">
             {{ currentPrayerText }}
           </p>
+          <p v-if="showAveMariasCount" class="mt-4 text-blue-600 font-medium text-center">
+            Rezar 10 vezes
+          </p>
         </div>
 
         <!-- Progresso -->
@@ -39,10 +42,18 @@
             Iniciar
           </button>
           <button
+            v-if="!isFinished"
             @click="nextPrayer"
             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Próximo
+          </button>
+          <button
+            v-else
+            @click="startPrayer"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Rezar Novamente
           </button>
         </div>
       </div>
@@ -52,103 +63,52 @@
 
 <script>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Pray',
   setup() {
+    const router = useRouter()
     const currentStep = ref(0)
     const currentMysteryIndex = ref(0)
     const currentAveMaria = ref(0)
 
     const mysteries = {
       gozosos: [
-        {
-          title: 'A anunciação',
-          description: 'No primeiro mistério, contemplamos a anunciação do Arcanjo São Gabriel a Nossa Senhora.'
-        },
-        {
-          title: 'A visitação',
-          description: 'No segundo mistério, contemplamos a visitação de Nossa Senhora à sua prima Santa Isabel.'
-        },
-        {
-          title: 'O nascimento',
-          description: 'No terceiro mistério, contemplamos o nascimento do menino Jesus em Belém.'
-        },
-        {
-          title: 'A apresentação',
-          description: 'No quarto mistério, contemplamos a apresentação do menino Jesus no templo e a purificação de Nossa Senhora.'
-        },
-        {
-          title: 'O encontro',
-          description: 'No quinto mistério, contemplamos a perda e o encontro do menino Jesus no templo.'
-        }
+        'No primeiro mistério, contemplamos a anunciação do Anjo a Nossa Senhora.',
+        'No segundo mistério, contemplamos a visitação de Nossa Senhora a sua prima Isabel.',
+        'No terceiro mistério, contemplamos o nascimento de Jesus em Belém.',
+        'No quarto mistério, contemplamos a apresentação do menino Jesus no templo.',
+        'No quinto mistério, contemplamos a perda e o encontro do menino Jesus no templo.'
       ],
       dolorosos: [
-        {
-          title: 'A agonia',
-          description: 'No primeiro mistério, contemplamos a agonia de Cristo, nosso Senhor, quando suou sangue no horto.'
-        },
-        {
-          title: 'A flagelação',
-          description: 'No segundo mistério, contemplamos a flagelação de Jesus Cristo atado à coluna.'
-        },
-        {
-          title: 'A coroação',
-          description: 'No terceiro mistério, contemplamos a coroação de espinhos de nosso Senhor.'
-        },
-        {
-          title: 'A subida do Calvário',
-          description: 'No quarto mistério, contemplamos Jesus Cristo carregando a cruz para o Calvário.'
-        },
-        {
-          title: 'A morte',
-          description: 'No quinto mistério, contemplamos a crucifixão e a morte de nosso Senhor Jesus Cristo.'
-        }
+        'No primeiro mistério, contemplamos a agonia de Jesus no Horto.',
+        'No segundo mistério, contemplamos a flagelação de Jesus Cristo.',
+        'No terceiro mistério, contemplamos a coroação de espinhos.',
+        'No quarto mistério, contemplamos Jesus carregando a cruz para o Calvário.',
+        'No quinto mistério, contemplamos a crucificação e morte de Jesus.'
       ],
       gloriosos: [
-        {
-          title: 'A ressurreição',
-          description: 'No primeiro mistério, contemplamos a ressurreição de Cristo, nosso Senhor.'
-        },
-        {
-          title: 'A ascensão',
-          description: 'No segundo mistério, contemplamos a ascensão de nosso Senhor ao céu.'
-        },
-        {
-          title: 'A vinda do Espírito Santo',
-          description: 'No terceiro mistério, contemplamos a vinda do Espírito Santo sobre os apóstolos, reunidos com Maria Santíssima no Cenáculo, em Jerusalém.'
-        },
-        {
-          title: 'A assunção',
-          description: 'No quarto mistério, contemplamos a assunção de Nossa Senhora ao céu.'
-        },
-        {
-          title: 'A coroação',
-          description: 'No quinto mistério, contemplamos a coroação de Nossa Senhora no céu como Rainha de todos os anjos e santos.'
-        }
+        'No primeiro mistério, contemplamos a ressurreição de Jesus Cristo.',
+        'No segundo mistério, contemplamos a ascensão de Jesus ao céu.',
+        'No terceiro mistério, contemplamos a vinda do Espírito Santo.',
+        'No quarto mistério, contemplamos a assunção de Nossa Senhora.',
+        'No quinto mistério, contemplamos a coroação de Nossa Senhora.'
       ],
       luminosos: [
-        {
-          title: 'O Batismo de Jesus',
-          description: 'No primeiro mistério, contemplamos Jesus que, ao ser batizado no Rio Jordão, o céu se abre, e o Pai o proclama Filho bem amado.'
-        },
-        {
-          title: 'Jesus faz seu primeiro milagre',
-          description: 'No segundo mistério, contemplamos o primeiro milagre de Jesus em Caná, transformando a água em vinho.'
-        },
-        {
-          title: 'Jesus anuncia o Reino de Deus',
-          description: 'No terceiro mistério, contemplamos Jesus pregando seus ensinamentos e anunciando o Reino de Deus.'
-        },
-        {
-          title: 'Jesus se transfigura',
-          description: 'No quarto mistério, contemplamos a transfiguração de Jesus e os apóstolos que ouvem a voz do Pai: "Este é meu Filho amado".'
-        },
-        {
-          title: 'Jesus institui a Eucaristia',
-          description: 'No quinto mistério, contemplamos Jesus que se oferece ao Eterno Pai por nós, doando-nos o seu próprio Corpo e Sangue.'
-        }
+        'No primeiro mistério, contemplamos o batismo de Jesus no Jordão.',
+        'No segundo mistério, contemplamos o primeiro milagre de Jesus em Caná.',
+        'No terceiro mistério, contemplamos o anúncio do Reino de Deus.',
+        'No quarto mistério, contemplamos a transfiguração de Jesus.',
+        'No quinto mistério, contemplamos a instituição da Eucaristia.'
       ]
+    }
+
+    const mysteryNames = {
+      gozosos: 'Mistérios Gozosos',
+      dolorosos: 'Mistérios Dolorosos',
+      gloriosos: 'Mistérios Gloriosos',
+      luminosos: 'Mistérios Luminosos'
     }
 
     const prayers = {
@@ -159,7 +119,7 @@ export default {
       oMeuBomJesus: 'Ó meu bom Jesus, perdoai-nos, livrai-nos do fogo do inferno, levai as almas todas para o céu e socorrei principalmente as que mais precisarem.',
       salveRainha: 'Salve, Rainha, Mãe de misericórdia, vida, doçura, esperança nossa, salve! A vós bradamos, os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro, mostrai-nos Jesus, bendito fruto do vosso ventre, ó clemente, ó piedosa, ó doce sempre Virgem Maria.',
       creio: 'Creio em Deus Pai todo-poderoso, criador do céu e da terra; e em Jesus Cristo, seu único Filho, nosso Senhor; que foi concebido pelo poder do Espírito Santo; nasceu da Virgem Maria; padeceu sob Pôncio Pilatos, foi crucificado, morto e sepultado; desceu à mansão dos mortos; ressuscitou ao terceiro dia; subiu aos céus; está sentado à direita de Deus Pai todo-poderoso, donde há de vir a julgar os vivos e os mortos. Creio no Espírito Santo; na Santa Igreja Católica; na comunhão dos santos; na remissão dos pecados; na ressurreição da carne; na vida eterna. Amém.'
-    } 
+    }
 
     const getCurrentMysteryType = () => {
       const date = new Date()
@@ -183,7 +143,6 @@ export default {
     }
 
     const currentMysteryType = ref(getCurrentMysteryType())
-    const currentMysteries = computed(() => mysteries[currentMysteryType.value])
 
     const currentTitle = computed(() => {
       if (currentStep.value === 0) return 'Oração Inicial'
@@ -192,7 +151,7 @@ export default {
       if (currentStep.value >= 3) {
         const mysteryIndex = Math.floor((currentStep.value - 3) / 12)
         if (mysteryIndex < 5) {
-          return currentMysteries.value[mysteryIndex].title
+          return `${mysteryNames[currentMysteryType.value]} - ${mysteryIndex + 1}º Mistério`
         } else {
           return 'Salve Rainha'
         }
@@ -200,35 +159,56 @@ export default {
       return ''
     })
 
+    const showAveMariasCount = computed(() => {
+      if (currentStep.value === 2) return false // Não mostrar "10 vezes" nas Ave-Marias iniciais
+      
+      const mysteryStep = (currentStep.value - 3) % 12
+      return mysteryStep === 2
+    })
+
+    const isFinished = computed(() => {
+      return currentStep.value >= 63 // Total de passos do rosário
+    })
+
     const currentPrayerText = computed(() => {
       if (currentStep.value === 0) return prayers.initial
       if (currentStep.value === 1) return prayers.creio
       if (currentStep.value === 2) {
         if (currentAveMaria.value === 0) return prayers.paiNosso
-        if (currentAveMaria.value < 4) return prayers.aveMaria
-        return prayers.gloria
+        if (currentAveMaria.value === 1) return 'Primeira Ave-Maria pela virtude da Fé\n\n' + prayers.aveMaria
+        if (currentAveMaria.value === 2) return 'Segunda Ave-Maria pela virtude da Esperança\n\n' + prayers.aveMaria
+        if (currentAveMaria.value === 3) return 'Terceira Ave-Maria pela virtude da Caridade\n\n' + prayers.aveMaria
+        if (currentAveMaria.value === 4) return prayers.gloria
+        return ''
       }
       
       const mysteryStep = (currentStep.value - 3) % 12
       const mysteryIndex = Math.floor((currentStep.value - 3) / 12)
       
       if (mysteryIndex < 5) {
-        if (mysteryStep === 0) return currentMysteries.value[mysteryIndex].description
+        if (mysteryStep === 0) return mysteries[currentMysteryType.value][mysteryIndex]
         if (mysteryStep === 1) return prayers.paiNosso
-        if (mysteryStep <= 10) return prayers.aveMaria
+        if (mysteryStep === 2) return prayers.aveMaria
         if (mysteryStep === 11) return prayers.gloria
-        return prayers.oMeuBomJesus
+        if (mysteryStep === 3) return prayers.oMeuBomJesus
+        return ''
       } else {
         return prayers.salveRainha
       }
     })
 
     const progress = computed(() => {
+      if (isFinished.value) return 100
       const total = 63 // Total steps in the rosary
       return Math.round((currentStep.value / total) * 100)
     })
 
     const nextPrayer = () => {
+      if (isFinished.value) {
+        router.push('/') // Voltar para home quando terminar
+        return
+      }
+      
       if (currentStep.value === 2) {
         if (currentAveMaria.value < 4) {
           currentAveMaria.value++
@@ -237,7 +217,13 @@ export default {
           currentAveMaria.value = 0
         }
       } else {
-        currentStep.value++
+        const mysteryStep = (currentStep.value - 3) % 12
+        if (mysteryStep === 2) {
+          // Quando estiver nas Ave-Marias, pular direto para o próximo mistério
+          currentStep.value = currentStep.value + 9
+        } else {
+          currentStep.value++
+        }
       }
     }
 
@@ -254,7 +240,9 @@ export default {
       currentPrayerText,
       progress,
       nextPrayer,
-      startPrayer
+      startPrayer,
+      showAveMariasCount,
+      isFinished
     }
   }
 }
