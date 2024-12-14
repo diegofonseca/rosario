@@ -3,8 +3,8 @@
     <div class="max-w-4xl mx-auto px-4">
       <!-- Cabeçalho -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-blue-900">{{ currentTitle }}</h1>
-        <p class="text-gray-600 mt-2">{{ currentSubtitle }}</p>
+        <h1 class="text-3xl font-bold text-blue-900">Santo Terço</h1>
+        <p class="text-gray-600 mt-2">{{ currentTitle }}</p>
       </div>
 
       <!-- Cartão principal -->
@@ -20,12 +20,12 @@
         <div class="mb-8">
           <div class="flex justify-between text-sm text-gray-600 mb-2">
             <span>Progresso</span>
-            <span>{{ currentPrayer }} / {{ totalPrayers }}</span>
+            <span>{{ progress }}%</span>
           </div>
           <div class="h-2 bg-blue-100 rounded-full">
             <div 
               class="h-full bg-blue-600 rounded-full transition-all duration-300"
-              :style="{ width: `${(currentPrayer / totalPrayers) * 100}%` }"
+              :style="{ width: `${progress}%` }"
             ></div>
           </div>
         </div>
@@ -33,98 +33,228 @@
         <!-- Botões -->
         <div class="flex justify-between">
           <button
-            @click="resetPrayer"
+            @click="startPrayer"
             class="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
-            Recomeçar
+            Iniciar
           </button>
           <button
             @click="nextPrayer"
             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            :disabled="currentPrayer >= totalPrayers"
           >
             Próximo
           </button>
         </div>
       </div>
-
-      <!-- Navegação -->
-      <div class="text-center">
-        <router-link 
-          to="/" 
-          class="text-blue-600 hover:text-blue-800 transition-colors"
-        >
-          Voltar para o início
-        </router-link>
-      </div>
     </div>
-    
   </div>
 </template>
 
 <script>
-import { useStore } from 'vuex'
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 
 export default {
   name: 'Pray',
   setup() {
-    const store = useStore()
+    const currentStep = ref(0)
+    const currentMysteryIndex = ref(0)
+    const currentAveMaria = ref(0)
 
-    const currentPrayer = computed(() => store.state.currentPrayer)
-    const prayerMode = computed(() => store.state.prayerMode)
-    const totalPrayers = computed(() => prayerMode.value === 'terco' ? 50 : 200)
+    const mysteries = {
+      gozosos: [
+        {
+          title: 'A anunciação',
+          description: 'No primeiro mistério, contemplamos a anunciação do Arcanjo São Gabriel a Nossa Senhora.'
+        },
+        {
+          title: 'A visitação',
+          description: 'No segundo mistério, contemplamos a visitação de Nossa Senhora à sua prima Santa Isabel.'
+        },
+        {
+          title: 'O nascimento',
+          description: 'No terceiro mistério, contemplamos o nascimento do menino Jesus em Belém.'
+        },
+        {
+          title: 'A apresentação',
+          description: 'No quarto mistério, contemplamos a apresentação do menino Jesus no templo e a purificação de Nossa Senhora.'
+        },
+        {
+          title: 'O encontro',
+          description: 'No quinto mistério, contemplamos a perda e o encontro do menino Jesus no templo.'
+        }
+      ],
+      dolorosos: [
+        {
+          title: 'A agonia',
+          description: 'No primeiro mistério, contemplamos a agonia de Cristo, nosso Senhor, quando suou sangue no horto.'
+        },
+        {
+          title: 'A flagelação',
+          description: 'No segundo mistério, contemplamos a flagelação de Jesus Cristo atado à coluna.'
+        },
+        {
+          title: 'A coroação',
+          description: 'No terceiro mistério, contemplamos a coroação de espinhos de nosso Senhor.'
+        },
+        {
+          title: 'A subida do Calvário',
+          description: 'No quarto mistério, contemplamos Jesus Cristo carregando a cruz para o Calvário.'
+        },
+        {
+          title: 'A morte',
+          description: 'No quinto mistério, contemplamos a crucifixão e a morte de nosso Senhor Jesus Cristo.'
+        }
+      ],
+      gloriosos: [
+        {
+          title: 'A ressurreição',
+          description: 'No primeiro mistério, contemplamos a ressurreição de Cristo, nosso Senhor.'
+        },
+        {
+          title: 'A ascensão',
+          description: 'No segundo mistério, contemplamos a ascensão de nosso Senhor ao céu.'
+        },
+        {
+          title: 'A vinda do Espírito Santo',
+          description: 'No terceiro mistério, contemplamos a vinda do Espírito Santo sobre os apóstolos, reunidos com Maria Santíssima no Cenáculo, em Jerusalém.'
+        },
+        {
+          title: 'A assunção',
+          description: 'No quarto mistério, contemplamos a assunção de Nossa Senhora ao céu.'
+        },
+        {
+          title: 'A coroação',
+          description: 'No quinto mistério, contemplamos a coroação de Nossa Senhora no céu como Rainha de todos os anjos e santos.'
+        }
+      ],
+      luminosos: [
+        {
+          title: 'O Batismo de Jesus',
+          description: 'No primeiro mistério, contemplamos Jesus que, ao ser batizado no Rio Jordão, o céu se abre, e o Pai o proclama Filho bem amado.'
+        },
+        {
+          title: 'Jesus faz seu primeiro milagre',
+          description: 'No segundo mistério, contemplamos o primeiro milagre de Jesus em Caná, transformando a água em vinho.'
+        },
+        {
+          title: 'Jesus anuncia o Reino de Deus',
+          description: 'No terceiro mistério, contemplamos Jesus pregando seus ensinamentos e anunciando o Reino de Deus.'
+        },
+        {
+          title: 'Jesus se transfigura',
+          description: 'No quarto mistério, contemplamos a transfiguração de Jesus e os apóstolos que ouvem a voz do Pai: "Este é meu Filho amado".'
+        },
+        {
+          title: 'Jesus institui a Eucaristia',
+          description: 'No quinto mistério, contemplamos Jesus que se oferece ao Eterno Pai por nós, doando-nos o seu próprio Corpo e Sangue.'
+        }
+      ]
+    }
+
+    const prayers = {
+      initial: 'Divino Jesus, nós vos oferecemos este terço que vamos rezar, contemplando os mistérios da nossa redenção. Concedei-nos, por intercessão de Maria, vossa Mãe Santíssima, a quem nos dirigimos, as virtudes que nos são necessárias para rezá-lo bem e a graça de ganhar as indulgências desta santa devoção.',
+      paiNosso: 'Pai Nosso que estais nos céus, santificado seja o vosso nome. Venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém.',
+      aveMaria: 'Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora de nossa morte. Amém.',
+      gloria: 'Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém.',
+      oMeuBomJesus: 'Ó meu bom Jesus, perdoai-nos, livrai-nos do fogo do inferno, levai as almas todas para o céu e socorrei principalmente as que mais precisarem.',
+      salveRainha: 'Salve, Rainha, Mãe de misericórdia, vida, doçura, esperança nossa, salve! A vós bradamos, os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro, mostrai-nos Jesus, bendito fruto do vosso ventre, ó clemente, ó piedosa, ó doce sempre Virgem Maria.',
+      creio: 'Creio em Deus Pai todo-poderoso, criador do céu e da terra; e em Jesus Cristo, seu único Filho, nosso Senhor; que foi concebido pelo poder do Espírito Santo; nasceu da Virgem Maria; padeceu sob Pôncio Pilatos, foi crucificado, morto e sepultado; desceu à mansão dos mortos; ressuscitou ao terceiro dia; subiu aos céus; está sentado à direita de Deus Pai todo-poderoso, donde há de vir a julgar os vivos e os mortos. Creio no Espírito Santo; na Santa Igreja Católica; na comunhão dos santos; na remissão dos pecados; na ressurreição da carne; na vida eterna. Amém.'
+    } 
+
+    const getCurrentMysteryType = () => {
+      const date = new Date()
+      const day = date.getDay()
+      
+      switch(day) {
+        case 0: // Domingo
+        case 3: // Quarta
+          return 'gloriosos'
+        case 1: // Segunda
+        case 6: // Sábado
+          return 'gozosos'
+        case 2: // Terça
+        case 5: // Sexta
+          return 'dolorosos'
+        case 4: // Quinta
+          return 'luminosos'
+        default:
+          return 'gozosos'
+      }
+    }
+
+    const currentMysteryType = ref(getCurrentMysteryType())
+    const currentMysteries = computed(() => mysteries[currentMysteryType.value])
 
     const currentTitle = computed(() => {
-      const prayer = currentPrayer.value
-      if (prayer === 0) return 'Oferecimento do Rosário'
-      if (prayer === 1) return 'Sinal da Cruz'
-      if (prayer === 2) return 'Creio em Deus Pai'
-      if (prayer === 3) return 'Pai Nosso'
-      if (prayer === 4 || prayer === 5 || prayer === 6) return 'Ave Maria'
-      if (prayer === 7) return 'Glória ao Pai'
-      if ((prayer - 8) % 11 === 0) return 'Pai Nosso'
-      if ((prayer - 8) % 11 === 10) return 'Glória ao Pai'
-      return 'Ave Maria'
-    })
-
-    const currentSubtitle = computed(() => {
-      const prayer = currentPrayer.value
-      if (prayer === 0) return 'Iniciando nossa oração'
-      if (prayer === 1) return 'Em nome do Pai, do Filho e do Espírito Santo'
-      if (prayer >= 8) {
-        const decade = Math.floor((prayer - 8) / 10) + 1
-        return `${decade}º Mistério`
+      if (currentStep.value === 0) return 'Oração Inicial'
+      if (currentStep.value === 1) return 'Creio'
+      if (currentStep.value === 2) return 'Pai Nosso e Ave Marias Iniciais'
+      if (currentStep.value >= 3) {
+        const mysteryIndex = Math.floor((currentStep.value - 3) / 12)
+        if (mysteryIndex < 5) {
+          return currentMysteries.value[mysteryIndex].title
+        } else {
+          return 'Salve Rainha'
+        }
       }
-      return 'Preparação'
+      return ''
     })
 
     const currentPrayerText = computed(() => {
-      const prayer = currentPrayer.value
-      if (prayer === 0) return store.state.prayers.oferecimento
-      if (prayer === 2) return store.state.prayers.creedoPt
-      if (prayer === 3 || (prayer - 8) % 11 === 0) return store.state.prayers.paiNosso
-      if (prayer === 7 || (prayer - 8) % 11 === 10) return store.state.prayers.gloria
-      if (prayer === totalPrayers.value) return store.state.prayers.salveRainha
-      return store.state.prayers.aveMaria
+      if (currentStep.value === 0) return prayers.initial
+      if (currentStep.value === 1) return prayers.creio
+      if (currentStep.value === 2) {
+        if (currentAveMaria.value === 0) return prayers.paiNosso
+        if (currentAveMaria.value < 4) return prayers.aveMaria
+        return prayers.gloria
+      }
+      
+      const mysteryStep = (currentStep.value - 3) % 12
+      const mysteryIndex = Math.floor((currentStep.value - 3) / 12)
+      
+      if (mysteryIndex < 5) {
+        if (mysteryStep === 0) return currentMysteries.value[mysteryIndex].description
+        if (mysteryStep === 1) return prayers.paiNosso
+        if (mysteryStep <= 10) return prayers.aveMaria
+        if (mysteryStep === 11) return prayers.gloria
+        return prayers.oMeuBomJesus
+      } else {
+        return prayers.salveRainha
+      }
+    })
+
+    const progress = computed(() => {
+      const total = 63 // Total steps in the rosary
+      return Math.round((currentStep.value / total) * 100)
     })
 
     const nextPrayer = () => {
-      store.commit('nextPrayer')
+      if (currentStep.value === 2) {
+        if (currentAveMaria.value < 4) {
+          currentAveMaria.value++
+        } else {
+          currentStep.value++
+          currentAveMaria.value = 0
+        }
+      } else {
+        currentStep.value++
+      }
     }
 
-    const resetPrayer = () => {
-      store.commit('resetPrayer')
+    const startPrayer = () => {
+      currentStep.value = 0
+      currentMysteryIndex.value = 0
+      currentAveMaria.value = 0
+      currentMysteryType.value = getCurrentMysteryType()
     }
 
     return {
-      currentPrayer,
-      totalPrayers,
+      currentStep,
       currentTitle,
-      currentSubtitle,
       currentPrayerText,
+      progress,
       nextPrayer,
-      resetPrayer
+      startPrayer
     }
   }
 }
